@@ -39,6 +39,9 @@ app.get("/", (request, response) => {
     })
 })
 
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 app.use('/api/user',userRouter)
 app.use('/api/category',categoryRouter)
