@@ -142,18 +142,23 @@ const Footer = () => {
                 <h2 className="text-[18px] font-[600] mb-4">Our company</h2>
 
                 <ul className="list">
-                  <li className="list-none text-[14px] w-full mb-3">
-                    <Link to="/" className="link">
-                      Delivery
-                    </Link>
-                  </li>
                   <li className="list-none text-  [14px] w-full mb-3">
                     <Link to="/legal" className="link">
                       Legal Notice
                     </Link>
                   </li>
                   <li className="list-none text-[14px] w-full mb-3">
-                    <Link to="/" className="link">
+                    <Link to="/privacypolicy" className="link">
+                      Privacy Policies
+                    </Link>
+                  </li>
+                   <li className="list-none text-[14px] w-full mb-3">
+                    <Link to="/exchangereturn" className="link">
+                      Exchange & Return
+                    </Link>
+                  </li>
+                  <li className="list-none text-[14px] w-full mb-3">
+                    <Link to="/terms-condition" className="link">
                       Terms and conditions of use
                     </Link>
                   </li>
@@ -161,17 +166,7 @@ const Footer = () => {
                     <Link to="/" className="link">
                       About us
                     </Link>
-                  </li>
-                  <li className="list-none text-[14px] w-full mb-3">
-                    <Link to="/" className="link">
-                      Secure payment
-                    </Link>
-                  </li>
-                  {/* <li className="list-none text-[14px] w-full mb-2">
-                    <Link to="/" className="link">
-                      Login
-                    </Link>
-                  </li> */}
+                  </li>                
                 </ul>
               </div>
             </div>

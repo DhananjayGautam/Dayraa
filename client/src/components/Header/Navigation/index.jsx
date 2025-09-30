@@ -31,7 +31,7 @@ const Navigation = (props) => {
 
   return (
     <>
-      <nav className="navigation">
+      <nav className="navigation  ">
         <div className="container flex items-center justify-start lg:justify-end gap-8">
           {
             context?.windowWidth > 992 &&

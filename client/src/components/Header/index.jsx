@@ -313,12 +313,16 @@ const Header = () => {
             </div>
           </div>
         </div>
+        
 
-        <Navigation isOpenCatPanel={isOpenCatPanel} setIsOpenCatPanel={setIsOpenCatPanel} />
       </header>
+      <div className="sticky -top-[100px]  z-[99] bg-[#FDF8F1]">
+        <Navigation isOpenCatPanel={isOpenCatPanel} setIsOpenCatPanel={setIsOpenCatPanel} />
+
+        </div>
 
 
-      <div className="afterHeader mt-[115px] lg:mt-0"></div>
+      {/* <div className="afterHeader mt-[115px] lg:mt-0"></div> */}
 
     </>
   );

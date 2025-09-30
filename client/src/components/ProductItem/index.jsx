@@ -207,10 +207,10 @@ const ProductItem = (props) => {
     <div className="productItem shadow-lg rounded-md overflow-hidden border-1 border-[rgba(0,0,0,0.1)]">
       <div className="group imgWrapper w-[100%]  overflow-hidden  rounded-md rounded-bl-none rounded-br-none relative">
         <Link to={`/product/${props?.item?._id}`}>
-          <div className="img relative aspect-[4/5] overflow-hidden w-full">
+          <div className="img relative aspect-[5/6] overflow-hidden w-full">
             <img
               src={props?.item?.images[0]}
-              className="w-full"
+              className="absolute inset-0 w-full h-full object-cover "
             />
 
             <img
@@ -300,7 +300,7 @@ const ProductItem = (props) => {
         </div>
       </div>
 
-      <div className="info p-3 py-5 relative pb-[50px] h-[190px]">
+      <div className="info p-3 py-5 relative  h-[170px]">
         <h6 className="text-[13px] !font-[400]">
           <span className="link transition-all">
             {props?.item?.brand}
@@ -314,11 +314,11 @@ const ProductItem = (props) => {
 
         <Rating name="size-small" defaultValue={props?.item?.rating} size="small" readOnly />
 
-        <div className="flex items-center gap-4 justify-between">
+        <div className="flex items-center gap-1 justify-start">
           <span className="oldPrice line-through text-gray-500 text-[12px] lg:text-[14px] font-[500]">
             {props?.item?.oldPrice?.toLocaleString('en-US', { style: 'currency', currency: 'INR' })}
           </span>
-          <span className="price text-primary text-[12px] lg:text-[14px]  font-[600]">
+          <span className="price text-[#16A34A] text-[12px] lg:text-[14px]  font-[600]">
             {props?.item?.price?.toLocaleString('en-US', { style: 'currency', currency: 'INR' })}
           </span>
         </div>

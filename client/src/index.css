@@ -6,15 +6,11 @@
 
 
 *{margin: 0px; padding: 0px; box-sizing: border-box;}
-f5f0f0
-FDF8F1
 
-fff
-fff
 body{
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
-  background: #FDF8F1;
+  background: #ffffff;
  
   color: #3e3e3e;
   overflow-x: hidden;

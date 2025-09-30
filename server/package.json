@@ -24,6 +24,8 @@
     "mongoose": "^8.9.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "puppeteer": "^24.22.3",
+    "qrcode-terminal": "^0.12.0"
   }
 }

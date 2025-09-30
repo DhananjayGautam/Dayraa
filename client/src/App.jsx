@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import "./App.css";
 import "./responsive.css";
 import Header from "./components/Header";
@@ -8,11 +8,10 @@ import Home from "./Pages/Home";
 import ProductListing from "./Pages/ProductListing";
 import { ProductDetails } from "./Pages/ProductDetails";
 import { createContext } from "react";
-
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import CartPage from "./Pages/Cart";
-import Verify from "./Pages/Verify";
+import Verify from "./Pages/Verify";  
 import ForgotPassword from "./Pages/ForgotPassword";
 import Checkout from "./Pages/Checkout";
 import MyAccount from "./Pages/MyAccount";
@@ -26,10 +25,23 @@ import Address from "./Pages/MyAccount/address";
 import { OrderSuccess } from "./Pages/Orders/success";
 import { OrderFailed } from "./Pages/Orders/failed";
 import SearchPage from "./Pages/Search";
+import ExchangeReturn from "./Pages/ExchangeReturn";
+import Privacy from "./Pages/Privacypolicies"; 
+import TermsConditions from "./Pages/TermsCondition";
 
+// Create a custom ScrollToTop component
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 const MyContext = createContext();
-
+  
 function App() {
   const [openProductDetailsModal, setOpenProductDetailsModal] = useState({
     open: false,
@@ -80,27 +92,18 @@ function App() {
     setOpenAddressPanel(newOpen);
   };
 
-
-
-
   useEffect(() => {
-
     const token = localStorage.getItem('accessToken');
 
     if (token !== undefined && token !== null && token !== "") {
       setIsLogin(true);
-
       getCartItems();
       getMyListData();
       getUserDetails();
-
     } else {
       setIsLogin(false);
     }
-
-
   }, [isLogin])
-
 
   const getUserDetails = () => {
     fetchDataFromApi(`/api/user/user-details`).then((res) => {
@@ -110,17 +113,11 @@ function App() {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
           alertBox("error", "Your session is closed please login again");
-
-
-          //window.location.href = "/login"
-
           setIsLogin(false);
         }
       }
     })
   }
-
-
 
   useEffect(() => {
     fetchDataFromApi("/api/category").then((res) => {
@@ -138,7 +135,6 @@ function App() {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-
   }, []);
 
   const alertBox = (type, msg) => {
@@ -150,10 +146,7 @@ function App() {
     }
   }
 
-
-
   const addToCart = (product, userId, quantity) => {
-
     if (userId === undefined) {
       alertBox("error", "you are not login please login first");
       return false;
@@ -176,24 +169,15 @@ function App() {
       ram: product?.ram
     }
 
-
     postData("/api/cart/add", data).then((res) => {
       if (res?.error === false) {
         alertBox("success", res?.message);
-
         getCartItems();
-
-
       } else {
         alertBox("error", res?.message);
       }
-
     })
-
-
   }
-
-
 
   const getCartItems = () => {
     fetchDataFromApi(`/api/cart/get`).then((res) => {
@@ -202,8 +186,6 @@ function App() {
       }
     })
   }
-
-
 
   const getMyListData = () => {
     fetchDataFromApi("/api/myList").then((res) => {
@@ -258,19 +240,12 @@ function App() {
     <>
       <BrowserRouter>
         <MyContext.Provider value={values}>
+          <ScrollToTop /> {/* Add the custom ScrollToTop component */}
           <Header />
           <Routes>
             <Route path={"/"} exact={true} element={<Home />} />
-            <Route
-              path={"/products"}
-              exact={true}
-              element={<ProductListing />}
-            />
-            <Route
-              path={"/product/:id"}
-              exact={true}
-              element={<ProductDetails />}
-            />
+            <Route path={"/products"} exact={true} element={<ProductListing />} />
+            <Route path={"/product/:id"} exact={true} element={<ProductDetails />} />
             <Route path={"/login"} exact={true} element={<Login />} />
             <Route path={"/register"} exact={true} element={<Register />} />
             <Route path={"/cart"} exact={true} element={<CartPage />} />
@@ -285,19 +260,15 @@ function App() {
             <Route path={"/address"} exact={true} element={<Address />} />
             <Route path={"/search"} exact={true} element={<SearchPage />} />
             <Route path={"/Legal"} exact={true} element={<Legal />} />
-
+            <Route path={"/exchangereturn"} exact={true} element={<ExchangeReturn />} />
+            <Route path={"/privacypolicy"} exact={true} element={<Privacy/>} />
+            <Route path={"/terms-condition"} exact={true} element={<TermsConditions />} />
           </Routes>
           <Footer />
         </MyContext.Provider>
       </BrowserRouter>
 
-
-
-
-
       <Toaster />
-
-
     </>
   );
 }
