@@ -3,7 +3,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import 'swiper/css/free-mode';
-
+import { Link, useLocation, useNavigate } from "react-router-dom";
+ 
 import { Navigation, FreeMode } from "swiper/modules";
 import { GoGift } from "react-icons/go";
 import { IoStatsChartSharp } from "react-icons/io5";
@@ -50,6 +51,7 @@ const DashboardBoxes = (props) => {
         className="dashboardBoxesSlider mb-5"
       >
         <SwiperSlide>
+          <Link to="/users">
           <div className="box bg-[#10b981] p-5 py-6  cursor-pointer hover:bg-[#289974] rounded-md border border-[rgba(0,0,0,0.1)] flex items-center gap-4">
             <FiPieChart className="text-[40px] text-[#fff]" />
             <div className="info w-[80%]">
@@ -58,11 +60,13 @@ const DashboardBoxes = (props) => {
             </div>
             <IoStatsChartSharp className="text-[45px] text-[#fff]" />
           </div>
+          </Link>
         </SwiperSlide>
 
 
 
         <SwiperSlide>
+          <Link to="/orders">
           <div className="box bg-[#3872fa] p-5 py-6 cursor-pointer hover:bg-[#346ae8] rounded-md border border-[rgba(0,0,0,0.1)] flex items-center gap-4">
             <GoGift className="text-[40px] text-[#fff]" />
             <div className="info w-[80%]">
@@ -71,11 +75,13 @@ const DashboardBoxes = (props) => {
             </div>
             <FiPieChart className="text-[40px] text-[#fff]" />
           </div>
+          </Link>
         </SwiperSlide>
 
 
 
         <SwiperSlide>
+           <Link to="/products">
           <div className="box p-5 bg-[#312be1d8]  py-6  cursor-pointer hover:bg-[#423eadd8] rounded-md border border-[rgba(0,0,0,0.1)] flex items-center gap-4">
             <RiProductHuntLine className="text-[40px] text-[#fff]" />
             <div className="info w-[80%]">
@@ -84,11 +90,13 @@ const DashboardBoxes = (props) => {
             </div>
             <IoStatsChartSharp className="text-[50px] text-[#fff]" />
           </div>
+          </Link>
         </SwiperSlide>
 
 
 
         <SwiperSlide>
+          <Link to="/category/list">
           <div className="box p-5  bg-[#f22c61]  py-6 cursor-pointer hover:bg-[#d52c59] rounded-md border border-[rgba(0,0,0,0.1)] flex items-center gap-4">
             <MdOutlineReviews className="text-[40px]  text-[#fff]" />
             <div className="info w-[80%]">
@@ -97,6 +105,8 @@ const DashboardBoxes = (props) => {
             </div>
             <IoStatsChartSharp className="text-[50px] text-[#fff]" />
           </div>
+          </Link>
+
         </SwiperSlide>
       </Swiper>
     </>

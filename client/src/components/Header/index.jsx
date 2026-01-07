@@ -95,12 +95,12 @@ const Header = () => {
   return (
     <>
       <header className="bg-[#FDF8F1] fixed lg:sticky left-0 w-full top-0 lg:-top-[47px] z-[101] ">
-        <div className="top-strip hidden lg:block py-2 border-t-[1px] border-gray-250  border-b-[1px] bg-[#D4AF37]">
+        <div className="top-strip hidden lg:block py-1 border-t-[1px] border-gray-250  border-b-[1px] bg-[#D4AF37]">
           <div className="container bg-[#D4AF37] w-2">
             <div className="flex items-center justify-between ">
               <div className="col1 w-[50%] hidden lg:block ">
                 <p className="text-[12px] font-[500] mt-0 mb-0">
-                  Get up to 50% off new season styles, limited time only
+                  <b> Get up to 50% off new season styles, limited time only</b>
                 </p>
               </div>
 
@@ -110,16 +110,16 @@ const Header = () => {
                     <Link
                       to="/help-center"
                       className="text-[11px] lg:text-[13px] link font-[500] transition"
-                    >
-                      Help Center{" "}
+                    ><b>Help Center{" "}</b>
+                      
                     </Link>
                   </li>
                   <li className="list-none">
                     <Link
                       to="/order-tracking"
                       className="text-[11px] lg:text-[13px] link font-[500] transition"
-                    >
-                      Order Tracking
+                    ><b>Order Tracking</b>
+                      
                     </Link>
                   </li>
                 </ul>

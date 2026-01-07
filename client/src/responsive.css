@@ -59,3 +59,14 @@
 @media only screen and (min-width:575px) and (max-width:767px){
     .cartPanel .MuiPaper-root,.addressPanel .MuiPaper-root{width: 400px !important;}
 }
+@media only screen and (max-width: 768px) {
+  .rightContent .bg-\[\#f1f1f1\] {
+    position: relative !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .rightContent .sticky {
+    position: relative !important;
+    top: 0 !important;
+  }
+}

@@ -31,6 +31,11 @@ const ProductItem = (props) => {
     const context = useContext(MyContext);
   
     const addToCart = (product, userId, quantity) => {
+      // Check stock availability before adding to cart
+      if (quantity > product?.countInStock) {
+        context?.alertBox("error", `Only ${product?.countInStock} items available in stock`);
+        return;
+      }
   
       const productItem = {
         _id: product?._id,
@@ -48,9 +53,7 @@ const ProductItem = (props) => {
         size: props?.item?.size?.length !== 0 ? selectedTabName : '',
         weight: props?.item?.productWeight?.length !== 0 ? selectedTabName : '',
         ram: props?.item?.productRam?.length !== 0 ? selectedTabName : ''
-  
       }
-  
   
       setIsLoading(true);
   
@@ -65,10 +68,7 @@ const ProductItem = (props) => {
           setIsLoading(false);
         }, 500);
         context?.addToCart(productItem, userId, quantity);
-  
       }
-  
-  
   
       if (activeTab !== null) {
         context?.addToCart(productItem, userId, quantity);
@@ -78,10 +78,7 @@ const ProductItem = (props) => {
           setIsLoading(false);
         }, 500);
       }
-  
-  
     }
-  
   
     const handleClickActiveTab = (index, name) => {
       setActiveTab(index)
@@ -105,7 +102,6 @@ const ProductItem = (props) => {
         setQuantity(1)
       }
   
-  
       if (myListItem?.length !== 0) {
         setIsAddedInMyList(true);
       } else {
@@ -114,14 +110,12 @@ const ProductItem = (props) => {
   
     }, [context?.cartData]);
   
-  
     const minusQty = () => {
       if (quantity !== 1 && quantity > 1) {
         setQuantity(quantity - 1)
       } else {
         setQuantity(1)
       }
-  
   
       if (quantity === 1) {
         deleteData(`/api/cart/delete-cart-item/${cartItem[0]?._id}`).then((res) => {
@@ -143,11 +137,14 @@ const ProductItem = (props) => {
           context?.getCartItems();
         })
       }
-  
     }
   
-  
     const addQty = () => {
+      // Check if we can add more quantity based on available stock
+      if (props?.item?.countInStock <= quantity) {
+        context?.alertBox("error", `Only ${props?.item?.countInStock} items available in stock`);
+        return;
+      }
   
       setQuantity(quantity + 1);
   
@@ -161,11 +158,7 @@ const ProductItem = (props) => {
         context.alertBox("success", res?.data?.message);
         context?.getCartItems();
       })
-  
-  
-  
     }
-  
   
     const handleAddToMyList = (item) => {
       if (context?.userData === null) {
@@ -186,7 +179,6 @@ const ProductItem = (props) => {
           discount: item?.discount
         }
   
-  
         postData("/api/myList/add", obj).then((res) => {
           if (res?.error === false) {
             context?.alertBox("success", res?.message);
@@ -196,9 +188,13 @@ const ProductItem = (props) => {
             context?.alertBox("error", res?.message);
           }
         })
-  
       }
     }
+
+    // Check if product is out of stock
+    const isOutOfStock = props?.item?.countInStock === 0;
+    // Check if we can add more to cart (for the plus button)
+    const canAddMore = props?.item?.countInStock > quantity;
 
   return (
     <div className="productItem p-4 shadow-md bg-[#f1f1f1] rounded-md overflow-hidden border-1 border-[rgba(0,0,0,0.1)] flex items-center flex-col lg:flex-row">
@@ -271,6 +267,13 @@ const ProductItem = (props) => {
           {props?.item?.discount}%
         </span>
 
+        {/* Show out of stock badge */}
+        {isOutOfStock && (
+          <span className="flex items-center absolute top-[10px] right-[10px] z-50 bg-red-500 text-white rounded-lg p-1 text-[12px] font-[500]">
+            Out of Stock
+          </span>
+        )}
+
         <div className="actions absolute top-[-20px] right-[5px] z-50 flex items-center gap-2 flex-col w-[50px] transition-all duration-300 group-hover:top-[15px] opacity-0 group-hover:opacity-100">
 
           <Button className="!w-[35px] !h-[35px] !min-w-[35px] !rounded-full !bg-white  text-black hover:!bg-primary hover:text-white group" onClick={() => context.handleOpenProductDetailsModal(true, props?.item)}>
@@ -312,6 +315,15 @@ const ProductItem = (props) => {
 
         <Rating name="size-small" value={props?.item?.rating} size="small" readOnly />
 
+        {/* Stock information */}
+        <div className="text-[12px] text-gray-500 mt-1 mb-2">
+          {isOutOfStock ? (
+            <span className="text-red-500">Out of stock</span>
+          ) : (
+            `${props?.item?.countInStock} items in stock`
+          )}
+        </div>
+
         <div className="flex items-center gap-4">
           <span className="oldPrice line-through text-gray-500 text-[15px] font-[500]">
           &#x20b9;{props?.item?.oldPrice}
@@ -325,9 +337,14 @@ const ProductItem = (props) => {
          {
             isAdded === false ?
 
-              <Button className="btn-org btn-border flex w-full btn-sm gap-2 " size="small"
-                onClick={() => addToCart(props?.item, context?.userData?._id, quantity)}>
-                <MdOutlineShoppingCart className="text-[18px]" /> Add to Cart
+              <Button 
+                className={`btn-org btn-border flex w-full btn-sm gap-2 ${isOutOfStock ? '!bg-gray-400 !cursor-not-allowed' : ''}`} 
+                size="small"
+                onClick={() => !isOutOfStock && addToCart(props?.item, context?.userData?._id, quantity)}
+                disabled={isOutOfStock}
+              >
+                <MdOutlineShoppingCart className="text-[18px]" /> 
+                {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
               </Button>
 
               :
@@ -345,9 +362,13 @@ const ProductItem = (props) => {
                     <div className="flex items-center justify-between overflow-hidden rounded-full border border-[rgba(0,0,0,0.1)]">
                       <Button className="!min-w-[35px] !w-[35px] !h-[30px] !bg-[#f1f1f1]  !rounded-none" onClick={minusQty}><FaMinus className="text-[rgba(0,0,0,0.7)]" /></Button>
                       <span>{quantity}</span>
-                      <Button className="!min-w-[35px] !w-[35px] !h-[30px] !bg-primary !rounded-none"
-                        onClick={addQty}>
-                        <FaPlus className="text-white" /></Button>
+                      <Button 
+                        className={`!min-w-[35px] !w-[35px] !h-[30px] !rounded-none ${canAddMore ? '!bg-primary' : '!bg-gray-400 !cursor-not-allowed'}`}
+                        onClick={canAddMore ? addQty : null}
+                        disabled={!canAddMore}
+                      >
+                        <FaPlus className="text-white" />
+                      </Button>
                     </div>
 
                 }

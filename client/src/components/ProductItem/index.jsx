@@ -15,24 +15,24 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { MdClose } from "react-icons/md";
 import { IoMdHeart } from "react-icons/io";
 
-
-
 const ProductItem = (props) => {
-
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [isAddedInMyList, setIsAddedInMyList] = useState(false);
   const [cartItem, setCartItem] = useState([]);
-
   const [activeTab, setActiveTab] = useState(null);
   const [isShowTabs, setIsShowTabs] = useState(false);
   const [selectedTabName, setSelectedTabName] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-
   const context = useContext(MyContext);
 
   const addToCart = (product, userId, quantity) => {
+    // Check stock availability before adding to cart
+    if (product?.countInStock < quantity) {
+      context?.alertBox("error", `Only ${product.countInStock} items available in stock`);
+      return;
+    }
 
     const productItem = {
       _id: product?._id,
@@ -50,80 +50,66 @@ const ProductItem = (props) => {
       size: props?.item?.size?.length !== 0 ? selectedTabName : '',
       weight: props?.item?.productWeight?.length !== 0 ? selectedTabName : '',
       ram: props?.item?.productRam?.length !== 0 ? selectedTabName : ''
-
-    }
-
+    };
 
     setIsLoading(true);
 
-    if (props?.item?.size?.length !== 0 || props?.item?.productRam?.length !== 0 || props?.item?.productWeight
-      ?.length !== 0) {
-      setIsShowTabs(true)
+    if (props?.item?.size?.length !== 0 || props?.item?.productRam?.length !== 0 || props?.item?.productWeight?.length !== 0) {
+      setIsShowTabs(true);
     } else {
       setIsAdded(true);
-
       setIsShowTabs(false);
       setTimeout(() => {
         setIsLoading(false);
       }, 500);
       context?.addToCart(productItem, userId, quantity);
-
     }
-
-
 
     if (activeTab !== null) {
       context?.addToCart(productItem, userId, quantity);
       setIsAdded(true);
-      setIsShowTabs(false)
+      setIsShowTabs(false);
       setTimeout(() => {
         setIsLoading(false);
       }, 500);
     }
-
-
-  }
-
+  };
 
   const handleClickActiveTab = (index, name) => {
-    setActiveTab(index)
-    setSelectedTabName(name)
-  }
+    setActiveTab(index);
+    setSelectedTabName(name);
+  };
 
   useEffect(() => {
     const item = context?.cartData?.filter((cartItem) =>
       cartItem.productId.includes(props?.item?._id)
-    )
+    );
 
     const myListItem = context?.myListData?.filter((item) =>
       item.productId.includes(props?.item?._id)
-    )
+    );
 
     if (item?.length !== 0) {
-      setCartItem(item)
+      setCartItem(item);
       setIsAdded(true);
-      setQuantity(item[0]?.quantity)
+      setQuantity(item[0]?.quantity);
     } else {
-      setQuantity(1)
+      setQuantity(1);
     }
-
 
     if (myListItem?.length !== 0) {
       setIsAddedInMyList(true);
     } else {
-      setIsAddedInMyList(false)
+      setIsAddedInMyList(false);
     }
-
   }, [context?.cartData]);
-
 
   const minusQty = () => {
     if (quantity !== 1 && quantity > 1) {
-      setQuantity(quantity - 1)
+      setQuantity(quantity - 1);
     } else {
-      setQuantity(1)
+      setQuantity(1);
     }
-
 
     if (quantity === 1) {
       deleteData(`/api/cart/delete-cart-item/${cartItem[0]?._id}`).then((res) => {
@@ -132,24 +118,27 @@ const ProductItem = (props) => {
         context?.getCartItems();
         setIsShowTabs(false);
         setActiveTab(null);
-      })
+      });
     } else {
       const obj = {
         _id: cartItem[0]?._id,
         qty: quantity - 1,
         subTotal: props?.item?.price * (quantity - 1)
-      }
+      };
 
       editData(`/api/cart/update-qty`, obj).then((res) => {
         context.alertBox("success", res?.data?.message);
         context?.getCartItems();
-      })
+      });
     }
-
-  }
-
+  };
 
   const addQty = () => {
+    // Check if we can add more quantity based on available stock
+    if (props?.item?.countInStock <= quantity) {
+      context?.alertBox("error", `Only ${props?.item?.countInStock} items available in stock`);
+      return;
+    }
 
     setQuantity(quantity + 1);
 
@@ -157,25 +146,19 @@ const ProductItem = (props) => {
       _id: cartItem[0]?._id,
       qty: quantity + 1,
       subTotal: props?.item?.price * (quantity + 1)
-    }
+    };
 
     editData(`/api/cart/update-qty`, obj).then((res) => {
       context.alertBox("success", res?.data?.message);
       context?.getCartItems();
-    })
-
-
-
-  }
-
+    });
+  };
 
   const handleAddToMyList = (item) => {
     if (context?.userData === null) {
       context?.alertBox("error", "you are not login please login first");
-      return false
-    }
-
-    else {
+      return false;
+    } else {
       const obj = {
         productId: item?._id,
         userId: context?.userData?._id,
@@ -186,8 +169,7 @@ const ProductItem = (props) => {
         oldPrice: item?.oldPrice,
         brand: item?.brand,
         discount: item?.discount
-      }
-
+      };
 
       postData("/api/myList/add", obj).then((res) => {
         if (res?.error === false) {
@@ -197,172 +179,197 @@ const ProductItem = (props) => {
         } else {
           context?.alertBox("error", res?.message);
         }
-      })
-
+      });
     }
-  }
+  };
 
+  // Check if product is out of stock
+  const isOutOfStock = props?.item?.countInStock === 0;
+  // Check if we can add more to cart (for the plus button)
+  const canAddMore = props?.item?.countInStock > quantity;
 
   return (
     <div className="productItem shadow-lg rounded-md overflow-hidden border-1 border-[rgba(0,0,0,0.1)]">
-      <div className="group imgWrapper w-[100%]  overflow-hidden  rounded-md rounded-bl-none rounded-br-none relative">
+      <div className="group imgWrapper w-[100%] overflow-hidden rounded-md rounded-bl-none rounded-br-none relative">
         <Link to={`/product/${props?.item?._id}`}>
-          <div className="img relative aspect-[5/6] overflow-hidden w-full">
+          <div className="img relative aspect-[6/7] overflow-hidden w-full">
             <img
               src={props?.item?.images[0]}
-              className="absolute inset-0 w-full h-full object-cover "
+              className="absolute inset-0 w-full h-full object-cover"
             />
-
             <img
               src={props?.item?.images[1]}
               className="w-full transition-all duration-700 absolute top-0 left-0 opacity-0 group-hover:opacity-100 group-hover:scale-105"
             />
-
           </div>
         </Link>
 
-
-
-        {
-          isShowTabs === true &&
-          <div className="flex items-center justify-center absolute top-0 left-0 w-full h-full 
-      bg-[rgba(0,0,0,0.7)] z-[60] p-3 gap-2">
-
-            <Button className="!absolute top-[10px] right-[10px] !min-w-[30px] !min-h-[30px] !w-[30px] !h-[30px] !rounded-full !bg-[rgba(255,255,255,1)] text-black"
+        {isShowTabs === true && (
+          <div className="flex items-center justify-center absolute top-0 left-0 w-full h-full bg-[rgba(0,0,0,0.7)] z-[60] p-3 gap-2">
+            <Button 
+              className="!absolute top-[10px] right-[10px] !min-w-[30px] !min-h-[30px] !w-[30px] !h-[30px] !rounded-full !bg-[rgba(255,255,255,1)] text-black"
               onClick={() => setIsShowTabs(false)}
-            > <MdClose className=" text-black z-[90] text-[25px]" /></Button>
+            >
+              <MdClose className="text-black z-[90] text-[25px]" />
+            </Button>
 
-            {
-              props?.item?.size?.length !== 0 && props?.item?.size?.map((item, index) => {
-                return (
-                  <span key={index} className={`flex items-center justify-center p-1 px-2 bg-[rgba(255,555,255,0.8)] max-w-[35px] h-[25px]  
-          rounded-sm cursor-pointer hover:bg-white 
-          ${activeTab === index && '!bg-primary text-white'}`}
-                    onClick={() => handleClickActiveTab(index, item)}
-                  >{item}
-                  </span>)
-              })
-            }
+            {props?.item?.size?.length !== 0 && props?.item?.size?.map((item, index) => {
+              return (
+                <span 
+                  key={index} 
+                  className={`flex items-center justify-center p-1 px-2 bg-[rgba(255,555,255,0.8)] max-w-[35px] h-[25px] rounded-sm cursor-pointer hover:bg-white ${activeTab === index && '!bg-primary text-white'}`}
+                  onClick={() => handleClickActiveTab(index, item)}
+                >
+                  {item}
+                </span>
+              );
+            })}
 
-            {
-              props?.item?.productRam?.length !== 0 && props?.item?.productRam?.map((item, index) => {
-                return (
-                  <span key={index} className={`flex items-center justify-center p-1 px-2 bg-[rgba(255,555,255,0.8)] max-w-[45px] h-[25px]  
-          rounded-sm cursor-pointer hover:bg-white 
-          ${activeTab === index && '!bg-primary text-white'}`}
-                    onClick={() => handleClickActiveTab(index, item)}
-                  >{item}
-                  </span>)
-              })
-            }
+            {props?.item?.productRam?.length !== 0 && props?.item?.productRam?.map((item, index) => {
+              return (
+                <span 
+                  key={index} 
+                  className={`flex items-center justify-center p-1 px-2 bg-[rgba(255,555,255,0.8)] max-w-[45px] h-[25px] rounded-sm cursor-pointer hover:bg-white ${activeTab === index && '!bg-primary text-white'}`}
+                  onClick={() => handleClickActiveTab(index, item)}
+                >
+                  {item}
+                </span>
+              );
+            })}
 
-
-            {
-              props?.item?.productWeight?.length !== 0 && props?.item?.productWeight?.map((item, index) => {
-                return (
-                  <span key={index} className={`flex items-center justify-center p-1 px-2 bg-[rgba(255,555,255,0.8)] max-w-[35px] h-[25px]  
-          rounded-sm cursor-pointer hover:bg-white 
-          ${activeTab === index && '!bg-primary text-white'}`}
-                    onClick={() => handleClickActiveTab(index, item)}
-                  >{item}
-                  </span>)
-              })
-            }
-
+            {props?.item?.productWeight?.length !== 0 && props?.item?.productWeight?.map((item, index) => {
+              return (
+                <span 
+                  key={index} 
+                  className={`flex items-center justify-center p-1 px-2 bg-[rgba(255,555,255,0.8)] max-w-[35px] h-[25px] rounded-sm cursor-pointer hover:bg-white ${activeTab === index && '!bg-primary text-white'}`}
+                  onClick={() => handleClickActiveTab(index, item)}
+                >
+                  {item}
+                </span>
+              );
+            })}
           </div>
-        }
-
+        )}
 
         <span className="discount flex items-center absolute top-[10px] left-[10px] z-50 bg-primary text-white rounded-lg p-1 text-[12px] font-[500]">
           {props?.item?.discount}%
         </span>
 
-        <div className="actions absolute top-[-20px] right-[5px] z-50 flex items-center gap-2 flex-col w-[50px] transition-all duration-300 group-hover:top-[15px] opacity-0 group-hover:opacity-100">
+        {/* Show out of stock badge */}
+        {isOutOfStock && (
+          <span className="flex items-center absolute top-[10px] right-[10px] z-50 bg-red-500 text-white rounded-lg p-1 text-[12px] font-[500]">
+            Out of Stock
+          </span>
+        )}
 
-          <Button className="!w-[35px] !h-[35px] !min-w-[35px] !rounded-full !bg-white  text-black hover:!bg-primary hover:text-white group" onClick={() => context.handleOpenProductDetailsModal(true, props?.item)}>
+        <div className="actions absolute top-[-20px] right-[5px] z-50 flex items-center gap-2 flex-col w-[50px] transition-all duration-300 group-hover:top-[15px] opacity-0 group-hover:opacity-100">
+          <Button 
+            className="!w-[35px] !h-[35px] !min-w-[35px] !rounded-full !bg-white text-black hover:!bg-primary hover:text-white group" 
+            onClick={() => context.handleOpenProductDetailsModal(true, props?.item)}
+          >
             <MdZoomOutMap className="text-[18px] !text-black group-hover:text-white hover:!text-white" />
           </Button>
 
-          <Button className="!w-[35px] !h-[35px] !min-w-[35px] !rounded-full !bg-white  text-black hover:!bg-primary hover:text-white group">
+          <Button className="!w-[35px] !h-[35px] !min-w-[35px] !rounded-full !bg-white text-black hover:!bg-primary hover:text-white group">
             <IoGitCompareOutline className="text-[18px] !text-black group-hover:text-white hover:!text-white" />
           </Button>
 
-          <Button className={`!w-[35px] !h-[35px] !min-w-[35px] !rounded-full !bg-white  text-black hover:!bg-primary hover:text-white group`}
+          <Button 
+            className={`!w-[35px] !h-[35px] !min-w-[35px] !rounded-full !bg-white text-black hover:!bg-primary hover:text-white group`}
             onClick={() => handleAddToMyList(props?.item)}
           >
-            {
-              isAddedInMyList === true ? <IoMdHeart className="text-[18px] !text-primary group-hover:text-white hover:!text-white" /> :
-                <FaRegHeart className="text-[18px] !text-black group-hover:text-white hover:!text-white" />
-
-            }
-
+            {isAddedInMyList === true ? (
+              <IoMdHeart className="text-[18px] !text-primary group-hover:text-white hover:!text-white" />
+            ) : (
+              <FaRegHeart className="text-[18px] !text-black group-hover:text-white hover:!text-white" />
+            )}
           </Button>
         </div>
       </div>
 
-      <div className="info p-3 py-5 relative  h-[170px]">
-        <h6 className="text-[13px] !font-[400]">
-          <span className="link transition-all">
+      {/* Your requested info section with original buttons */}
+      <div className="info p-3 relative">
+        {/* Brand */}
+        <div className="mb-1">
+          <span className="text-[11px] text-gray-500 uppercase tracking-wide font-medium">
             {props?.item?.brand}
           </span>
-        </h6>
-        <h3 className="text-[12px] lg:text-[13px] title mt-1 font-[500] mb-1 text-[#000]">
-          <Link to={`/product/${props?.item?._id}`} className="link transition-all">
-            {props?.item?.name?.substr(0, 25) + '...'}
+        </div>
+
+        {/* Product Name */}
+        <h3 className="text-[13px] font-medium text-gray-800 mb-2 leading-tight line-clamp-2 hover:text-primary transition-colors">
+          <Link to={`/product/${props?.item?._id}`} className="hover:underline">
+            {props?.item?.name?.substr(0, 35) + '...'}
           </Link>
         </h3>
 
-        <Rating name="size-small" defaultValue={props?.item?.rating} size="small" readOnly />
-
-        <div className="flex items-center gap-1 justify-start">
-          <span className="oldPrice line-through text-gray-500 text-[12px] lg:text-[14px] font-[500]">
-            {props?.item?.oldPrice?.toLocaleString('en-US', { style: 'currency', currency: 'INR' })}
+        {/* Rating and Stock */}
+        <div className="flex items-center justify-between mb-2">
+          <Rating 
+            name="size-small" 
+            value={props?.item?.rating} 
+            size="small" 
+            readOnly 
+            className="!text-sm"
+          />
+          <span className={`text-[12px] font-medium ${
+            isOutOfStock ? 'text-red-500' : 'text-green-600'
+          }`}>
+            {isOutOfStock ? 'Out of stock' : `${props?.item?.countInStock} In Stock`}
           </span>
-          <span className="price text-[#16A34A] text-[12px] lg:text-[14px]  font-[600]">
+        </div>
+
+        {/* Price Section */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="price text-[14px] font-bold text-gray-900">
             {props?.item?.price?.toLocaleString('en-US', { style: 'currency', currency: 'INR' })}
           </span>
+          {props?.item?.oldPrice > props?.item?.price && (
+            <span className="oldPrice line-through text-gray-500 text-[12px] font-medium">
+              {props?.item?.oldPrice?.toLocaleString('en-US', { style: 'currency', currency: 'INR' })}
+            </span>
+          )}
         </div>
 
-
-        <div className="!absolute bottom-[15px] left-0 pl-3 pr-3 w-full">
-
-          {
-            isAdded === false ?
-
-              <Button className="btn-org addToCartBtn btn-border flex w-full btn-sm gap-2 " size="small"
-                onClick={() => addToCart(props?.item, context?.userData?._id, quantity)}>
-                <MdOutlineShoppingCart className="text-[18px]" /> Add to Cart
-              </Button>
-
-              :
-
-              <>
-                {
-                  isLoading === true ?
-                    <Button className="addtocart btn-org btn-border flex w-full btn-sm gap-2 " size="small">
-                      <CircularProgress />
-                    </Button>
-
-                    :
-
-
-                    <div className="flex items-center justify-between overflow-hidden rounded-full border border-[rgba(0,0,0,0.1)]">
-                      <Button className="!min-w-[35px] !w-[35px] !h-[30px] !bg-[#f1f1f1]  !rounded-none" onClick={minusQty}><FaMinus className="text-[rgba(0,0,0,0.7)]" /></Button>
-                      <span>{quantity}</span>
-                      <Button className="!min-w-[35px] !w-[35px] !h-[30px] !bg-gray-800 !rounded-none"
-                        onClick={addQty}>
-                        <FaPlus className="text-white" /></Button>
-                    </div>
-
-                }
-              </>
-
-          }
-
+        {/* Action Buttons - Keep Original Button Styling */}
+        <div className="!w-full">
+          {isAdded === false ? (
+            <Button 
+              className={`btn-org addToCartBtn btn-border flex w-full btn-sm gap-2 ${isOutOfStock ? '!bg-gray-400 !cursor-not-allowed' : ''}`} 
+              size="small"
+              onClick={() => !isOutOfStock && addToCart(props?.item, context?.userData?._id, quantity)}
+              disabled={isOutOfStock}
+            >
+              <MdOutlineShoppingCart className="text-[18px]" /> 
+              {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+            </Button>
+          ) : (
+            <>
+              {isLoading === true ? (
+                <Button className="addtocart btn-org btn-border flex w-full btn-sm gap-2" size="small">
+                  <CircularProgress />
+                </Button>
+              ) : (
+                <div className="flex items-center justify-between overflow-hidden rounded-full border border-[rgba(0,0,0,0.1)]">
+                  <Button 
+                    className="!min-w-[35px] !w-[35px] !h-[30px] !bg-[#f1f1f1] !rounded-none" 
+                    onClick={minusQty}
+                  >
+                    <FaMinus className="text-[rgba(0,0,0,0.7)]" />
+                  </Button>
+                  <span>{quantity}</span>
+                  <Button 
+                    className={`!min-w-[35px] !w-[35px] !h-[30px] !rounded-none ${canAddMore ? '!bg-gray-800' : '!bg-gray-400 !cursor-not-allowed'}`}
+                    onClick={canAddMore ? addQty : null}
+                    disabled={!canAddMore}
+                  >
+                    <FaPlus className="text-white" />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-
-
-
       </div>
     </div>
   );

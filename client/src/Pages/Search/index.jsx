@@ -31,7 +31,6 @@ const SearchPage = () => {
     window.scrollTo(0, 0);
   }, [])
 
-
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -39,8 +38,6 @@ const SearchPage = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
-
 
   const handleSortBy = (name, order, products, value) => {
     setSelectedSortVal(value);
@@ -55,8 +52,7 @@ const SearchPage = () => {
   }
 
   return (
-    <section className=" pb-0">
-
+    <section className="pb-0">
       <div className="bg-white p-2">
         <div className="container flex gap-3">
           <div className={`sidebarWrapper fixed -bottom-[100%] left-0 w-fulllg:h-full lg:static lg:w-[20%] bg-white z-[102] lg:z-[100] p-3 lg:p-0  transition-all lg:opacity-100 opacity-0 ${context?.openFilter === true ? 'open' : ''}`}>
@@ -77,9 +73,9 @@ const SearchPage = () => {
             ></div>
           }
 
-
           <div className="rightContent w-full lg:w-[80%] py-3">
-            <div className="bg-[#f1f1f1] p-2 w-full mb-4 rounded-md flex items-center justify-between sticky top-[135px] z-[99]">
+            {/* Updated to match ProductListing sort bar exactly */}
+            <div className="bg-[#f1f1f1] bg-opacity-80 p-2 w-full mb-4 rounded-md flex items-center justify-between sticky top-[100px] z-[99]">
               <div className="col1 flex items-center itemViewActions">
                 <Button
                   className={`!w-[35px] !h-[35px] !min-w-[35px] !rounded-full 
@@ -162,60 +158,49 @@ const SearchPage = () => {
               </div>
             </div>
 
+            {/* CHANGED: Updated grid layout to match ProductListing exactly */}
             <div
               className={`grid ${itemView === "grid"
-                ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                 : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-1"
-                } gap-4`}
+                } gap-2 md:gap-3 lg:gap-4`}
             >
               {itemView === "grid" ? (
                 <>
-
-                  {
-                    isLoading === true ? <ProductLoadingGrid view={itemView} />
-                      :
-
-                      productsData?.products?.length !== 0 && productsData?.products?.map((item, index) => {
-                        return (
-                          <ProductItem key={index} item={item} />
-                        )
-                      })
-
-                  }
-
-
+                  {isLoading === true ? (
+                    <ProductLoadingGrid view={itemView} />
+                  ) : (
+                    productsData?.products?.length !== 0 && 
+                    productsData?.products?.map((item, index) => {
+                      return <ProductItem key={index} item={item} />;
+                    })
+                  )}
                 </>
               ) : (
                 <>
-                  {
-                    isLoading === true ? <ProductLoadingGrid view={itemView} />
-                      :
-
-                      productsData?.products?.length !== 0 && productsData?.products?.map((item, index) => {
-                        return (
-                          <ProductItemListView key={index} item={item} />
-                        )
-                      })
-
-                  }
-
+                  {isLoading === true ? (
+                    <ProductLoadingGrid view={itemView} />
+                  ) : (
+                    productsData?.products?.length !== 0 && 
+                    productsData?.products?.map((item, index) => {
+                      return <ProductItemListView key={index} item={item} />;
+                    })
+                  )}
                 </>
               )}
             </div>
 
-            {
-              totalPages > 1 &&
+            {totalPages > 1 && (
               <div className="flex items-center justify-center mt-10">
                 <Pagination
-                  showFirstButton showLastButton
+                  showFirstButton
+                  showLastButton
                   count={totalPages}
                   page={page}
                   onChange={(e, value) => setPage(value)}
                 />
               </div>
-            }
-
-
+            )}
           </div>
         </div>
       </div>

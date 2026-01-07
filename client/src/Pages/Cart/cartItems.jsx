@@ -17,7 +17,7 @@ const CartItems = (props) => {
   const [selectedQty, setSelectedQty] = useState(props.qty);
   const openQty = Boolean(qtyanchorEl);
 
-  const numbers = Array.from({ length: 20 }, () => Math.floor(Math.random() * 10) + 1);
+  const [currentStock, setCurrentStock] = useState(props?.item?.countInStock || 0);
 
   const context = useContext(MyContext);
 
@@ -34,9 +34,16 @@ const CartItems = (props) => {
   const handleClickQty = (event) => {
     setQtyAnchorEl(event.currentTarget);
   };
+
   const handleCloseQty = (value) => {
     setQtyAnchorEl(null);
     if (value !== null) {
+      // Check if selected quantity exceeds available stock
+      if (value > currentStock) {
+        context.alertBox("error", `Only ${currentStock} items available in stock`);
+        return;
+      }
+
       setSelectedQty(value);
 
       const cartObj = {
@@ -51,12 +58,8 @@ const CartItems = (props) => {
           context?.getCartItems();
         }
       })
-
-
-
     }
   };
-
 
   const updateCart = (selectedVal, qty, field) => {
     handleCloseSize(selectedVal)
@@ -70,14 +73,10 @@ const CartItems = (props) => {
       ram: props?.item?.ram !== "" ? selectedVal : '',
     }
 
-
     //if product size available
     if (field === "size") {
-
       fetchDataFromApi(`/api/product/${props?.item?.productId}`).then((res) => {
         const product = res?.product;
-
-
         const item = product?.size?.filter((size) =>
           size?.includes(selectedVal)
         )
@@ -92,20 +91,13 @@ const CartItems = (props) => {
         } else {
           context.alertBox("error", `Product not available with the size of ${selectedVal}`);
         }
-
-
       })
-
     }
-
 
     //if product weight available
     if (field === "weight") {
-
       fetchDataFromApi(`/api/product/${props?.item?.productId}`).then((res) => {
         const product = res?.product;
-
-
         const item = product?.productWeight?.filter((weight) =>
           weight?.includes(selectedVal)
         )
@@ -120,22 +112,13 @@ const CartItems = (props) => {
         } else {
           context.alertBox("error", `Product not available with the weight of ${selectedVal}`);
         }
-
-
       })
-
     }
-
-
-
 
     //if product ram available
     if (field === "ram") {
-
       fetchDataFromApi(`/api/product/${props?.item?.productId}`).then((res) => {
         const product = res?.product;
-
-
         const item = product?.productRam?.filter((ram) =>
           ram?.includes(selectedVal)
         )
@@ -150,18 +133,9 @@ const CartItems = (props) => {
         } else {
           context.alertBox("error", `Product not available with the ram of ${selectedVal}`);
         }
-
-
       })
-
     }
-
-
-
   }
-
-
-
 
   const removeItem = (id) => {
     deleteData(`/api/cart/delete-cart-item/${id}`).then((res) => {
@@ -170,6 +144,13 @@ const CartItems = (props) => {
     })
   }
 
+  // Update current stock when component mounts or props change
+  useEffect(() => {
+    setCurrentStock(props?.item?.countInStock || 0);
+  }, [props?.item?.countInStock]);
+
+  // Calculate maximum allowed quantity (minimum between 15 and current stock)
+  const maxAllowedQty = Math.min(15, currentStock);
 
   return (
     <div className="cartItem w-full p-3 flex items-center gap-4 pb-5 border-b border-[rgba(0,0,0,0.1)]">
@@ -190,6 +171,15 @@ const CartItems = (props) => {
         </h3>
 
         <Rating name="size-small" value={props?.item?.rating} size="small" readOnly />
+
+        {/* Show stock information */}
+        <div className="text-[11px] text-gray-500 mt-1">
+          {currentStock > 0 ? (
+            `${currentStock} items in stock`
+          ) : (
+            <span className="text-red-500">Out of stock</span>
+          )}
+        </div>
 
         <div className="flex items-center gap-4 mt-2">
           {
@@ -275,9 +265,6 @@ const CartItems = (props) => {
             </>
           }
 
-
-
-
           {
             props?.item?.weight !== "" &&
             <>
@@ -319,33 +306,35 @@ const CartItems = (props) => {
             </>
           }
 
-
-
           <div className="relative">
             <span
-              className="flex items-center justify-center bg-[#f1f1f1] text-[11px]
-     font-[600] py-1 px-2 rounded-md cursor-pointer"
-              onClick={handleClickQty}
+              className={`flex items-center justify-center bg-[#f1f1f1] text-[11px] font-[600] py-1 px-2 rounded-md cursor-pointer ${currentStock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={currentStock > 0 ? handleClickQty : null}
             >
               Qty: {selectedQty} <GoTriangleDown />
             </span>
 
-            <Menu
-              id="size-menu"
-              anchorEl={qtyanchorEl}
-              open={openQty}
-              onClose={() => handleCloseQty(null)}
-              MenuListProps={{
-                "aria-labelledby": "basic-button",
-              }}
-            >
-
-
-              {Array.from({ length: 15 }).map((_, index) => (
-                <MenuItem key={index} onClick={() => handleCloseQty(index + 1)}>{index + 1}</MenuItem>
-              ))}
-
-            </Menu>
+            {currentStock > 0 && (
+              <Menu
+                id="size-menu"
+                anchorEl={qtyanchorEl}
+                open={openQty}
+                onClose={() => handleCloseQty(null)}
+                MenuListProps={{
+                  "aria-labelledby": "basic-button",
+                }}
+              >
+                {Array.from({ length: maxAllowedQty }).map((_, index) => (
+                  <MenuItem 
+                    key={index} 
+                    onClick={() => handleCloseQty(index + 1)}
+                    disabled={index + 1 > currentStock}
+                  >
+                    {index + 1}
+                  </MenuItem>
+                ))}
+              </Menu>
+            )}
           </div>
         </div>
 

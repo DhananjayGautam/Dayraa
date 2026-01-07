@@ -11,8 +11,6 @@ import { postData } from "../../utils/api";
 import { FaCheckDouble } from "react-icons/fa";
 import { IoMdHeart } from "react-icons/io";
 
-
-
 export const ProductDetailsComponent = (props) => {
   const [productActionIndex, setProductActionIndex] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -25,16 +23,18 @@ export const ProductDetailsComponent = (props) => {
   const context = useContext(MyContext);
 
   const handleSelecteQty = (qty) => {
-    setQuantity(qty);
+    // Check if selected quantity exceeds available stock
+    if (qty <= props?.item?.countInStock) {
+      setQuantity(qty);
+    } else {
+      context?.alertBox("error", `Only ${props?.item?.countInStock} items available in stock`);
+    }
   }
-
-
 
   const handleClickActiveTab = (index, name) => {
     setProductActionIndex(index)
     setSelectedTabName(name)
   }
-
 
   useEffect(() => {
     const item = context?.cartData?.filter((cartItem) =>
@@ -46,26 +46,26 @@ export const ProductDetailsComponent = (props) => {
     } else {
       setIsAdded(false)
     }
-
   }, [isAdded])
-
 
   useEffect(() => {
     const myListItem = context?.myListData?.filter((item) =>
       item.productId.includes(props?.item?._id)
     )
 
-
     if (myListItem?.length !== 0) {
       setIsAddedInMyList(true);
     } else {
       setIsAddedInMyList(false)
     }
-
   }, [context?.myListData])
 
   const addToCart = (product, userId, quantity) => {
-
+    // Check stock availability before adding to cart
+    if (quantity > product?.countInStock) {
+      context?.alertBox("error", `Only ${product?.countInStock} items available in stock`);
+      return false;
+    }
 
     if (userId === undefined) {
       context?.alertBox("error", "you are not login please login first");
@@ -88,10 +88,7 @@ export const ProductDetailsComponent = (props) => {
       size: props?.item?.size?.length !== 0 ? selectedTabName : '',
       weight: props?.item?.productWeight?.length !== 0 ? selectedTabName : '',
       ram: props?.item?.productRam?.length !== 0 ? selectedTabName : ''
-
     }
-
-
 
     if (props?.item?.size?.length !== 0 || props?.item?.productWeight?.length !== 0 || props?.item?.productRam?.length !== 0) {
       if (selectedTabName !== null) {
@@ -100,22 +97,18 @@ export const ProductDetailsComponent = (props) => {
         postData("/api/cart/add", productItem).then((res) => {
           if (res?.error === false) {
             context?.alertBox("success", res?.message);
-
             context?.getCartItems();
             setTimeout(() => {
               setIsLoading(false);
               setIsAdded(true)
             }, 500);
-
           } else {
             context?.alertBox("error", res?.message);
             setTimeout(() => {
               setIsLoading(false);
             }, 500);
           }
-
         })
-
       } else {
         setTabError(true);
       }
@@ -124,32 +117,26 @@ export const ProductDetailsComponent = (props) => {
       postData("/api/cart/add", productItem).then((res) => {
         if (res?.error === false) {
           context?.alertBox("success", res?.message);
-
           context?.getCartItems();
           setTimeout(() => {
             setIsLoading(false);
             setIsAdded(true)
           }, 500);
-
         } else {
           context?.alertBox("error", res?.message);
           setTimeout(() => {
             setIsLoading(false);
           }, 500);
         }
-
       })
     }
   }
-
 
   const handleAddToMyList = (item) => {
     if (context?.userData === null) {
       context?.alertBox("error", "you are not login please login first");
       return false
-    }
-
-    else {
+    } else {
       const obj = {
         productId: item?._id,
         userId: context?.userData?._id,
@@ -162,7 +149,6 @@ export const ProductDetailsComponent = (props) => {
         discount: item?.discount
       }
 
-
       postData("/api/myList/add", obj).then((res) => {
         if (res?.error === false) {
           context?.alertBox("success", res?.message);
@@ -172,10 +158,11 @@ export const ProductDetailsComponent = (props) => {
           context?.alertBox("error", res?.message);
         }
       })
-
     }
   }
 
+  // Check if product is out of stock
+  const isOutOfStock = props?.item?.countInStock === 0;
 
   return (
     <>
@@ -197,18 +184,18 @@ export const ProductDetailsComponent = (props) => {
       <div className="flex flex-col sm:flex-row md:flex-row lg:flex-row items-start sm:items-center gap-4 mt-4">
         <div className="flex items-center gap-4">
           <span className="oldPrice line-through text-gray-500 text-[20px] font-[500]">
-            &#x20b9;{props?.item?.price}
+            &#x20b9;{props?.item?.oldPrice}
           </span>
           <span className="price text-primary text-[20px]  font-[600]">
-            &#x20b9;{props?.item?.oldPrice}
+            &#x20b9;{props?.item?.price}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
           <span className="text-[14px]">
             Available In Stock:{" "}
-            <span className="text-green-600 text-[14px] font-bold">
-              {props?.item?.countInStock} Items
+            <span className={`text-[14px] font-bold ${isOutOfStock ? 'text-red-600' : 'text-green-600'}`}>
+              {isOutOfStock ? 'Out of Stock' : `${props?.item?.countInStock} Items`}
             </span>
           </span>
         </div>
@@ -218,129 +205,113 @@ export const ProductDetailsComponent = (props) => {
         {props?.item?.description}
       </p>
 
-
-      {
-        props?.item?.productRam?.length !== 0 &&
+      {props?.item?.productRam?.length !== 0 &&
         <div className="flex items-center gap-3">
           <span className="text-[16px]">RAM:</span>
           <div className="flex items-center gap-1 actions">
-            {
-              props?.item?.productRam?.map((item, index) => {
-                return (
-                  <Button
-                    key={index}
-                    className={`${productActionIndex === index ?
-                      "!bg-primary !text-white" : ""
-                      }  ${tabError === true && 'error'}`}
-                    onClick={() => handleClickActiveTab(index, item)}
-                  >
-                    {item}
-                  </Button>
-                )
-              })
-            }
-
-
+            {props?.item?.productRam?.map((item, index) => {
+              return (
+                <Button
+                  key={index}
+                  className={`${productActionIndex === index ?
+                    "!bg-primary !text-white" : ""
+                    }  ${tabError === true && 'error'}`}
+                  onClick={() => handleClickActiveTab(index, item)}
+                >
+                  {item}
+                </Button>
+              )
+            })}
           </div>
         </div>
       }
 
-
-
-      {
-        props?.item?.size?.length !== 0 &&
+      {props?.item?.size?.length !== 0 &&
         <div className="flex items-center gap-3">
           <span className="text-[16px]">SIZE:</span>
           <div className="flex items-center gap-1 actions">
-            {
-              props?.item?.size?.map((item, index) => {
-                return (
-                  <Button
-                    key={index}
-                    className={`${productActionIndex === index ?
-                      "!bg-primary !text-white" : ""
-                      } ${tabError === true && 'error'}`}
-                    onClick={() => handleClickActiveTab(index, item)}
-                  >
-                    {item}
-                  </Button>
-                )
-              })
-            }
-
-
+            {props?.item?.size?.map((item, index) => {
+              return (
+                <Button
+                  key={index}
+                  className={`${productActionIndex === index ?
+                    "!bg-primary !text-white" : ""
+                    } ${tabError === true && 'error'}`}
+                  onClick={() => handleClickActiveTab(index, item)}
+                >
+                  {item}
+                </Button>
+              )
+            })}
           </div>
         </div>
       }
 
-
-
-      {
-        props?.item?.productWeight?.length !== 0 &&
+      {props?.item?.productWeight?.length !== 0 &&
         <div className="flex items-center gap-3">
           <span className="text-[16px]">WEIGHT:</span>
           <div className="flex items-center gap-1 actions">
-            {
-              props?.item?.productWeight?.map((item, index) => {
-                return (
-                  <Button
-                    key={index}
-                    className={`${productActionIndex === index ?
-                      "!bg-primary !text-white" : ""
-                      }  ${tabError === true && 'error'}`}
-                    onClick={() => handleClickActiveTab(index, item)}
-                  >
-                    {item}
-                  </Button>
-                )
-              })
-            }
-
-
+            {props?.item?.productWeight?.map((item, index) => {
+              return (
+                <Button
+                  key={index}
+                  className={`${productActionIndex === index ?
+                    "!bg-primary !text-white" : ""
+                    }  ${tabError === true && 'error'}`}
+                  onClick={() => handleClickActiveTab(index, item)}
+                >
+                  {item}
+                </Button>
+              )
+            })}
           </div>
         </div>
       }
-
-
 
       <p className="text-[14px] mt-5 mb-2 text-[#000]">
         Free Shipping (Est. Delivery Time 2-3 Days)
       </p>
+      
       <div className="flex items-center gap-4 py-4">
         <div className="qtyBoxWrapper w-[70px]">
-          <QtyBox handleSelecteQty={handleSelecteQty} />
+          <QtyBox 
+            handleSelecteQty={handleSelecteQty} 
+            maxQuantity={props?.item?.countInStock} // Pass max quantity to QtyBox
+          />
         </div>
 
-        <Button className="btn-org flex gap-2 !min-w-[150px]" onClick={() => addToCart(props?.item, context?.userData?._id, quantity)}>
+        <Button 
+          className={`btn-org flex gap-2 !min-w-[150px] ${isOutOfStock ? '!bg-gray-400 !cursor-not-allowed' : ''}`} 
+          onClick={() => !isOutOfStock && addToCart(props?.item, context?.userData?._id, quantity)}
+          disabled={isOutOfStock || isLoading}
+        >
           {
             isLoading === true ? <CircularProgress /> :
               <>
                 {
-                  isAdded === true ? <><FaCheckDouble /> Added</> :
+                  isAdded === true ? 
+                    <><FaCheckDouble /> Added</> :
                     <>
-                      <MdOutlineShoppingCart className="text-[22px]" /> Add to Cart
+                      <MdOutlineShoppingCart className="text-[22px]" /> 
+                      {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                     </>
                 }
-
               </>
           }
-
         </Button>
       </div>
 
       <div className="flex items-center gap-4 mt-4">
         <span className="flex items-center gap-2 text-[14px] sm:text-[15px] link cursor-pointer font-[500]" onClick={() => handleAddToMyList(props?.item)}>
           {
-            isAddedInMyList === true ? <IoMdHeart className="text-[18px] !text-primary group-hover:text-white hover:!text-white" /> :
+            isAddedInMyList === true ? 
+              <IoMdHeart className="text-[18px] !text-primary group-hover:text-white hover:!text-white" /> :
               <FaRegHeart className="text-[18px] !text-black group-hover:text-white hover:!text-white" />
-
           }
           Add to Wishlist
         </span>
 
-        <span className="flex items-center gap-2  text-[14px] sm:text-[15px] link cursor-pointer font-[500]">
-          <IoGitCompareOutline className="text-[18px]" /> Add to Compare
-        </span>
+        
       </div>
     </>
   );
